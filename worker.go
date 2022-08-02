@@ -57,9 +57,12 @@ func (w *Workers) startDispatcher(nworkers int) {
 	// First, initialize the channel we are going to but the workers' work channels into.
 	w.workerQueue = make(chan chan WorkerTask, nworkers)
 
+	if !w.opts.Silent {
+		log.Println("Starting workers")
+	}
 	// Now, create all of our workers.
 	for i := 0; i < nworkers; i++ {
-		if !w.opts.Silent {
+		if w.opts.Verbose {
 			log.Println("Starting workers", i+1)
 		}
 		work := worker{
@@ -71,12 +74,16 @@ func (w *Workers) startDispatcher(nworkers int) {
 		work.start()
 	}
 
+	if !w.opts.Silent {
+		log.Println("Finished starting workers")
+	}
+
 	go func(wk *Workers) {
 		for {
 			select {
 			case workQ := <-wk.workQueue:
 				if w.opts.Verbose {
-					log.Println("Received work requeust")
+					log.Println("Received work request")
 				}
 				go func() {
 					work := <-wk.workerQueue
