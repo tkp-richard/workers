@@ -21,6 +21,7 @@ type WorkerTask struct {
 	Do   func()
 }
 
+// Opts options for logging, etc
 type Opts struct {
 	Silent  bool
 	Verbose bool
