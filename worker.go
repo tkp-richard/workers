@@ -11,6 +11,8 @@ type Workers struct {
 	workers     []worker
 	workQueue   chan WorkerTask
 	workerQueue chan chan WorkerTask
+
+	opts Opts
 }
 
 // WorkerTask struct
@@ -19,11 +21,22 @@ type WorkerTask struct {
 	Do   func()
 }
 
+// Opts options for logging, etc
+type Opts struct {
+	Silent  bool
+	Verbose bool
+}
+
 // New will create new workers package
 // maxWorker will define the maximum worker available
-func New(maxWorker int) *Workers {
+func New(maxWorker int, opts ...Opts) *Workers {
+	var opt Opts
+	if len(opts) > 0 {
+		opt = opts[0]
+	}
 	w := &Workers{
 		workQueue: make(chan WorkerTask, 100),
+		opts:      opt,
 	}
 	w.startDispatcher(maxWorker)
 	return w
@@ -45,9 +58,14 @@ func (w *Workers) startDispatcher(nworkers int) {
 	// First, initialize the channel we are going to but the workers' work channels into.
 	w.workerQueue = make(chan chan WorkerTask, nworkers)
 
+	if !w.opts.Silent {
+		log.Println("Starting workers")
+	}
 	// Now, create all of our workers.
 	for i := 0; i < nworkers; i++ {
-		log.Println("Starting workers", i+1)
+		if w.opts.Verbose {
+			log.Println("Starting workers", i+1)
+		}
 		work := worker{
 			ID:          uuid.New().String(),
 			Work:        make(chan WorkerTask),
@@ -57,15 +75,22 @@ func (w *Workers) startDispatcher(nworkers int) {
 		work.start()
 	}
 
+	if !w.opts.Silent {
+		log.Println("Finished starting workers")
+	}
+
 	go func(wk *Workers) {
 		for {
 			select {
 			case workQ := <-wk.workQueue:
-				log.Println("Received work requeust")
+				if w.opts.Verbose {
+					log.Println("Received work request")
+				}
 				go func() {
 					work := <-wk.workerQueue
-
-					log.Println("Dispatching work request")
+					if w.opts.Verbose {
+						log.Println("Dispatching work request")
+					}
 					work <- workQ
 				}()
 			}
