@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// Workers struct
+// WorkerPool struct
 type WorkerPool struct {
 	taskQueue   chan Task
 	workerQueue chan bool
@@ -15,7 +15,7 @@ type WorkerPool struct {
 	opts Opts
 }
 
-// WorkerTask struct
+// Task struct
 type Task struct {
 	Name string
 	Do   func(w *WorkerPool)
