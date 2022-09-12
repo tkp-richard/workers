@@ -1,4 +1,4 @@
-module github.com/reyhanfahlevi/workers
+module github.com/reyhanfahlevi/workers/v2
 
 go 1.17
 
